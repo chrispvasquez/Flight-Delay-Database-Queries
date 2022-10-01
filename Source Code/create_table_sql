@@ -1,0 +1,48 @@
+#This file creates the SQL tables
+
+drop table if exists airlines;
+create table airlines
+(
+	airline_id varchar(2),
+	airline_name varchar(50),
+	primary key (airline_id)
+);
+
+drop table if exists airports;
+create table airports
+(
+	airport_iata varchar(3),
+	airport_name varchar(50),
+	city varchar(30),
+	state varchar(2),
+	country varchar(5),
+	lati decimal(5, 5),
+	longi decimal(5, 5),
+	primary key (airport_iata)
+);
+
+drop table if exists flights;
+create table flights
+(
+	year integer,
+	month integer,
+	day integer,
+	week_day integer,
+	airline_id varchar(2),
+	flight_num integer,
+	tail_num varchar(10),
+	origin_iata varchar(3),
+	dest_iata varchar(3),
+	sched_dep_time integer,
+	delay_dep integer,
+	distance integer,
+	sched_arr_time integer,
+	delay_arr integer,
+	primary key (year, month, day, tail_num, sched_dep_time)
+);
+
+load data local infile 'data/airlines.txt' into table airlines fields terminated by ',';
+
+load data local infile 'data/airports.txt' into table airports fields terminated by ',';
+
+load data local infile 'data/flights.txt' into table flights fields terminated by ',';

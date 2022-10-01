@@ -1,0 +1,177 @@
+
+# Q1 ::: Find all American Airlines flights, their scheduled departures, and tail numbers that are on Wednesdays in January ordered by day in the month
+#select f.tail_num as Tail_Num, f.day as Day, f.sched_dep_time as Scheduled_Daprture
+#from flights f inner join airlines a
+#on f.airline_id=a.airline_id
+#where a.airline_name="American Airlines Inc." and f.week_day=4 and f.month=1
+#order by day;
+
+
+# Q2 ::: Find the TOTAL Delay of each airline based on their respective flights and list from greatest to least 
+
+#select sum(delay_dep)+sum(delay_arr) as Total_Delay, a.airline_name as Airline_Name
+#from flights f inner join airlines a
+#on f.airline_id = a.airline_id
+#group by a.airline_name
+#order by total_delay desc;
+	
+
+# Q3 ::: Find all Delta Air Lines flights and their deignated planes that depart from LA ordered lexicographically
+#select tail_num as Tail_Num, flight_num as Flight, month as Month, day as Day
+#from flights
+#where airline_id in (select airline_id
+#		     from airlines
+#		     where airline_name="Delta Air Lines Inc.") and
+#		     origin_iata in (select airport_iata
+#		     from airports
+#		     where state = "LA")
+#order by tail_num;
+
+
+# Q4 ::: Find the tail number of all planes that have flown from LAX to JFK and from JFK to LAX in the month of March
+#select tail_num as Tail_Number
+#from flights
+#where origin_iata=("LAX") and dest_iata=("JFK") and month=3
+#intersect
+#select tail_num as Tail_Number
+#from flights
+#where origin_iata=("JFK") and dest_iata=("LAX") and month=3
+#order by Tail_Number;
+
+
+# Q5 ::: Find all flights and their airline that depart from Texas and arrive in New York in March 2015, ordered by day in the month
+#select day as Day_In_March, airline_name as Airline, airlines.airline_id as Airline_ID, flight_num as Flight_Number
+#from flights inner join airlines
+#on flights.airline_id=airlines.airline_id
+#where origin_iata in (select airport_iata
+#		      from airports
+#		      where state = "TX") and
+#      dest_iata in (select airport_iata
+#		    from airports
+#		    where state = "NY")and
+#      month = 3
+#order by day;
+
+
+# Q6 ::: Find all airports that did not have departing flights from Hawaiian Airlines, Spirit Air Lines, or US Airways Inc.
+#select distinct airport_iata, airport_name
+#from airports a inner join flights f
+#on a.airport_iata = f.origin_iata
+#where f.airline_id not in (select airline_id
+#			   from airlines
+#			   where airline_name = "Hawaiian Airlines Inc."
+#			   union
+#			   select airline_id
+#			   from airlines
+#			   where airline_name = "Spirit Air Lines"
+#			   union
+#			   select airline_id
+#			   from airlines
+#			   where airline_name = "US Airways Inc."
+#);
+
+
+# Q7 ::: Find the average delay for departure in each airport from the months of February and March during week days
+
+#select A.airport_name as Airport_Name, avg(F.delay_dep) as Avg_Departure_Delay
+#from flights F, airports as A 
+#where F.origin_iata=A.airport_iata and week_day<>1 and month=2
+#union
+#select A.airport_name as Airport_Name, avg(F.delay_dep) as Avg_Departure_Delay
+#from flights F, airports as A 
+#where F.origin_iata=A.airport_iata and week_day<>7 and month=3
+#union
+#select A.airport_name as Airport_Name, avg(F.delay_dep) as Avg_Departure_Delay
+#from flights F, airports as A 
+#where F.origin_iata=A.airport_iata and week_day<>1 and month=3
+#union
+#select A.airport_name as Airport_Name, avg(F.delay_dep) as Avg_Departure_Delay
+#from flights F, airports as A 
+#where F.origin_iata=A.airport_iata and week_day<>7 and month=2
+#group by Airport_Name
+#order by Airport_Name;
+
+
+# Q8 ::: Find all planes that have flown for Virign America or Spirit Air Lines, arrived in FL, Orlando, and order numerically by tail number
+#with flights_to_fl as(
+#	select *
+#	from flights
+#	where dest_iata in (select airport_iata
+#			    from airports
+#			    where city="Orlando" and state="FL")
+#)
+#
+#select distinct t1.tail_num as Tail_Num, t2.airline_name as Airline_Name
+#from flights_to_fl t1 inner join airlines t2
+#on t1.airline_id=t2.airline_id
+#where airline_name like "%Spirit%"
+#union
+#select distinct t1.tail_num as Tail_Num, t2.airline_name as Airline_Name
+#from flights_to_fl t1 inner join airlines t2
+#on t1.airline_id=t2.airline_id
+#where airline_name like "%Virgin America%"
+#order by tail_num;
+
+
+
+# Q9 ::: List the airline with the greatest TOTAL delay for each month and day and order by month, day excluding delays caused by flying to or from HI or AK
+#select airline_d.AIRLINE as Airline, max(airline_d.T_D) as Total_Delay, airline_d.MONTH as Month, airline_d.DAY as Day
+#from( with flights_wo_HI_AK as(
+#      select *
+#      from flights F  
+#      where origin_iata in (select airport_iata
+#		            from airports
+#		            where state <> "HI"
+#		            union
+#		            select airport_iata
+#		            from airports
+#		            where state <> "AK") or
+#            dest_iata in (select airport_iata
+#	                  from airports
+#		          where state <> "HI"
+#		          union
+#		          select airport_iata
+#		          from airports
+#		          where state <> "AK")
+#      )
+#
+#      select a.airline_name as AIRLINE, sum(delay_arr)+sum(delay_dep) as T_D, f.month as MONTH, f.day as DAY
+#      from flights_wo_HI_AK f inner join airlines a
+#      on f.airline_id=a.airline_id
+#      group by a.airline_name, f.month, f.day
+#      order by f.month, f.day) as airline_d
+#group by Month, Day;
+
+
+# Q10 ::: Find all planes that flew on both a Saturday and Sunday of the same month and the airport that it departed from and arrived at and order by airline
+
+#drop view if exists flight_o;
+#create view flight_o as
+#	select year, month, day, tail_num, sched_dep_time, airport_name as origin_port
+#	from flights f1 inner join airports a1
+#	on f1.origin_iata = a1.airport_iata;
+#
+#drop view if exists flight_d;
+#create view flight_d as
+#	select year, month, day, tail_num, sched_dep_time, airport_name as des_port
+#	from flights f2 inner join airports a2
+#	on f2.dest_iata = a2.airport_iata;
+#
+#
+#
+#select distinct airline_name as Airline_Name, 
+#       tail_num as Tail_Number,
+#       (select origin_port
+#	from flight_o
+#	where F1.year=flight_o.year and F1.month=flight_o.month and F1.day=flight_o.day and F1.tail_num=flight_o.tail_num and F1.sched_dep_time=flight_o.sched_dep_time) as Origin_Port,
+#       (select des_port
+#	from flight_d
+#	where F1.year=flight_d.year and F1.month=flight_d.month and F1.day=flight_d.day and F1.tail_num=flight_d.tail_num and F1.sched_dep_time=flight_d.sched_dep_time) as Destination_Port
+#from flights F1, airlines A1
+#where F1.airline_id=A1.airline_id and 
+#      week_day = 6 and 
+#      exists (select *
+#	      from flights as F2
+#	      where week_day = 7 and
+#	      F1.month = F2.month)
+#order by airline_name;
